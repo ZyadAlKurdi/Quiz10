@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار قانون الكرة الطائرة - إعداد زياد طارق عزيز</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --wrong: #e74c3c; --correct: #27ae60; --bg: #f4f7f6; }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        .quiz-container { background: white; width: 100%; max-width: 900px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin: 0 auto; }
+        h1 { text-align: center; color: var(--primary); border-bottom: 3px solid #2980b9; padding-bottom: 15px; font-size: 24px; }
+        .stats { display: flex; justify-content: space-between; background: #eee; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
+        .question { font-size: 20px; color: var(--secondary); line-height: 1.6; margin-bottom: 25px; border-right: 5px solid #2980b9; padding-right: 15px; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button.option { padding: 15px; border: 2px solid #ddd; border-radius: 12px; background: #fff; cursor: pointer; transition: 0.3s; font-family: 'Tajawal'; font-size: 16px; text-align: right; display: flex; align-items: center; }
+        button.option:hover:not([disabled]) { border-color: #2980b9; background: #f9f9f9; }
+        button.correct { background: var(--correct) !important; color: white; border-color: #1e8449; }
+        button.wrong { background: var(--wrong) !important; color: white; border-color: #a93226; }
+        .result-screen { display: none; text-align: center; }
+        .final-score { font-size: 40px; color: #2980b9; margin: 20px 0; }
+        .review-section { margin-top: 40px; text-align: right; display: none; }
+        .review-item { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 10px; }
+        .review-q { font-weight: bold; margin-bottom: 10px; color: var(--secondary); }
+        .review-opt { font-size: 14px; margin: 5px 0; padding: 5px; border-radius: 5px; }
+        .opt-correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .opt-wrong { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .btn-action { padding: 15px 30px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin: 10px; transition: 0.3s; }
+        .btn-pdf { background: #2980b9; color: white; }
+        .btn-reload { background: var(--correct); color: white; }
+        @media (max-width: 600px) { .options { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="quiz-box">
+        <h1>پرسیاری ساڵی پار</h1>
+        <div class="stats">
+            <span>السؤال: <span id="q-num">1</span> / <span id="total-qs">47</span></span>
+            <span>النتيجة: <span id="score">0</span></span>
+        </div>
+        <div id="question" class="question">جاري تحميل السؤال...</div>
+        <div id="options" class="options"></div>
+    </div>
+
+    <div id="result-box" class="result-screen">
+        <h1>انتهى الاختبار</h1>
+        <div class="final-score" id="final-res">0 / 47</div>
+        <div id="percent" style="font-size: 24px; font-weight: bold; margin-bottom: 20px;"></div>
+        <button onclick="window.print()" class="btn-action btn-pdf">تحميل النتيجة كـ PDF 📄</button>
+        <button onclick="location.reload()" class="btn-action btn-reload">إعادة الاختبار 🔄</button>
+        <div id="review-area" class="review-section">
+            <h2 style="border-bottom: 2px solid var(--secondary); padding-bottom: 10px;">مراجعة الأسئلة والإجابات الصحيحة:</h2>
+            <div id="review-list"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const rawData = [
+    { q: "كم عدد اللاعبين الأساسيين في كل فريق على أرض الملعب؟", a: ["4", "5", "6", "7", "8"], c: "6" },
+    { q: "كم يبلغ طول ملعب الكرة الطائرة؟", a: ["16م", "17م", "19م", "18م", "20م"], c: "18م" },
+    { q: "كم عرض ملعب الكرة الطائرة؟", a: ["7م", "8م", "10م", "11م", "9م"], c: "9م" },
+    { q: "كم ارتفاع الشبكة في مباريات الرجال؟", a: ["2.24م", "2.34م", "2.35م", "2.43م", "2.55م"], c: "2.43م" },
+    { q: "كم ارتفاع الشبكة في مباريات السيدات؟", a: ["2.15م", "2.24م", "2.23م", "2.28م", "2.30م"], c: "2.24م" },
+    { q: "كم عدد اللمسات المسموح بها لكل فريق لإعادة الكرة؟", a: ["2", "3", "4", "5", "6"], c: "3" },
+    { q: "كم عدد الأشواط في مباراة الكرة الطائرة؟", a: ["شوط واحد", "شوطين", "3 أشواط", "4 أشواط", "5 أشواط"], c: "5 أشواط" },
+    { q: "في حال دخول لاعب من خارج قائمة الفريق، فإن القرار هو:", a: ["طرد اللاعب", "تحذير شفهي", "إعادة اللعب", "خسارة النقطة", "رفض المشاركة"], c: "خسارة النقطة" },
+    { q: "هل يمكن لليبرو أن يصبح قائداً للفريق؟", a: ["نعم", "لا", "فقط إذا غاب القائد", "حسب القانون المحلي", "نعم بشرط تغيير القميص"], c: "نعم" },
+    { q: "متى يمكن للحكم إيقاف اللعب؟", a: ["عند إصابة لاعب", "دخول جمهور", "خلل في الشبكة", "كل ما سبق"], c: "كل ما سبق" },
+    { q: "من يحكم على الأخطاء في الخطوط؟", a: ["الحكم الأول", "الحكم الثاني", "حكام الخط", "القائد", "الليبرو"], c: "حكام الخط" },
+    { q: "كم عدد حكام الخطوط في المباريات الدولية؟", a: ["1", "2", "3", "4", "5"], c: "4" },
+    { q: "من يقرر إلغاء الشوط أو المباراة؟", a: ["الحكم الأول", "اللجنة الفنية", "القائد", "الحكم الثاني", "اللجنة المنظمة"], c: "الحكم الأول" },
+    { q: "هل يجوز ارتداء اللاعب لقطع معدنية ظاهرة؟", a: ["نعم", "لا", "فقط في اليد", "فقط إذا وافق الحكم", "في المباريات غير الرسمية"], c: "لا" },
+    { q: "متى يُمنح اللاعب بطاقة صفراء؟", a: ["عند الاحتفال", "عند الاعتراض على الحكم", "عند تأخير اللعب", "سلوك رياضي بسيط", "جميع ما سبق"], c: "سلوك رياضي بسيط" },
+    { q: "متى يُمنح الفريق نقطة؟", a: ["عند ارتكاب الفريق الآخر خطأ", "عند إحراز إرسال ناجح", "عند تنفيذ صد ناجح", "كل ما سبق"], c: "كل ما سبق" },
+    { q: "هل يمكن للاعب الصف الخلفي أن يهاجم من الخط الأمامي؟", a: ["نعم", "لا", "فقط إذا قفز من خلف الخط", "حسب مستوى الفريق", "فقط في الكرة الطائرة الشاطئية"], c: "فقط إذا قفز من خلف الخط" },
+    { q: "عند كم نقطة يتم التبديل بين الجهات في الشوط الخامس؟", a: ["6", "7", "8", "10", "12"], c: "8" },
+    { q: "هل يجب أن تلمس الكرة الأرض لتُحسب نقطة؟", a: ["نعم", "لا", "فقط في بعض الحالات", "فقط بعد الصد", "حسب القرار التحكيمي"], c: "نعم" },
+    { q: "ما الحد الأقصى لعدد الليبرو في قائمة الفريق؟", a: ["1", "2", "3", "4", "لا حد"], c: "2" },
+    { q: "هل يجوز للاعب استخدام القدم لإعادة الكرة؟", a: ["نعم", "لا", "فقط في الدفاع", "فقط إذا أقر الحكم", "نعم لكن لمرة واحدة فقط"], c: "نعم" },
+    { q: "ماذا يعني إرسال خاطئ؟", a: ["الكرة لا تعبر الشبكة", "الكرة تلامس العصا", "الكرة تخرج خارج الملعب", "اللاعب يلمس الخط", "كل ما سبق"], c: "كل ما سبق" },
+    { q: "هل يمكن للاعب أن يلمس الكرة مرتين متتاليتين؟", a: ["نعم دائماً", "لا أبداً", "فقط في الصد", "فقط في الإرسال", "فقط بعد الكرة الحرة"], c: "فقط في الصد" },
+    { q: "إذا تم طرد لاعب، كم شوط يجب أن يغيب؟", a: ["شوط واحد", "شوطين", "بقية المباراة", "لا يغيب", "حسب تقدير الحكم"], c: "شوط واحد" },
+    { q: "في الكرة الطائرة، ما هو الدور الأساسي للخط الأمامي؟", a: ["الدفاع فقط", "التغطية فقط", "الإرسال والصد", "الهجوم والصد", "تغيير المراكز"], c: "الهجوم والصد" },
+    { q: "ما هو طول خط الهجوم من الشبكة؟", a: ["1 متر", "2 متر", "3 متر", "4 متر", "5 متر"], c: "3 متر" },
+    { q: "هل يمكن لليبرو أن يقوم بدور الإرسال؟", a: ["نعم", "لا", "أحياناً", "فقط عند الإصابة", "فقط إذا وافق الحكم"], c: "لا" },
+    { q: "ما مدة الفترة (بالدقائق) بين الأشواط؟", a: ["1", "2", "3", "4", "5"], c: "3" },
+    { q: "في حال التعادل 24-24، كم يجب أن يكون الفارق للفوز؟", a: ["نقطة", "نقطتان", "لا نقاط", "4 نقاط", "لا يوجد شرط"], c: "نقطتان" },
+    { q: "ما هو أقصى عدد للتبديلات المسموح بها في الشوط؟", a: ["4", "5", "6", "10", "12"], c: "6" },
+    { q: "من المسؤول عن إدارة الوقت (الأوقات المستقطعة وفترات الراحة)؟", a: ["الحكم الأول", "الحكم الثاني", "المسجل", "حكم الخط", "المدرب"], c: "الحكم الثاني" },
+    { q: "كم يجب أن يكون عرض الخطوط في الملعب؟", a: ["2 سم", "3 سم", "4 سم", "5 سم", "6 سم"], c: "5 سم" },
+    { q: "هل يمكن أن تلمس الكرة حافة الشبكة أثناء العبور؟", a: ["نعم", "لا", "فقط في الإرسال", "فقط في الهجوم", "إذا وافق الحكم"], c: "نعم" },
+    { q: "هل يمكن للحكم إيقاف اللعب لأسباب فنية؟", a: ["نعم", "لا", "حسب الطقس", "حسب رأي الجمهور", "إذا طلب المدرب"], c: "نعم" },
+    { q: "ما اسم ضربة البداية في اللعب؟", a: ["الإرسال", "الإعداد", "الضرب الساحق", "الصد", "الاستقبال"], c: "الإرسال" },
+    { q: "هل تعتبر الكرة داخل إذا لامست الخط؟", a: ["نعم", "لا", "حسب الحكم", "لا في كل الحالات", "فقط إذا لمست الخط الجانبي"], c: "نعم" },
+    { q: "من يقرر إعادة اللعب في حالة ارتباك أو تدخل خارجي؟", a: ["الحكم الأول", "الحكم الثاني", "المدرب", "المسجل", "القائد"], c: "الحكم الأول" },
+    { q: "هل يحق للمدرب التحدث مع الحكم الأول مباشرة؟", a: ["نعم", "لا", "فقط القائد", "في نهاية الشوط", "عبر الحكم الثاني"], c: "لا" },
+    { q: "عند كم نقطة يتم الفوز بالشوط العادي؟", a: ["21", "23", "25", "27", "30"], c: "25" },
+    { q: "ما عدد المرات التي يمكن فيها للفريق طلب وقت مستقطع في الشوط؟", a: ["مرة واحدة", "مرتين", "ثلاث مرات", "أربع مرات", "لا يوجد حد"], c: "مرتين" },
+    { q: "هل يمكن للاعب تغيير مركزه في الملعب بعد ضربة الإرسال؟", a: ["نعم", "لا", "إذا سمح الحكم", "فقط عند التبديل", "إذا لمس الكرة"], c: "نعم" },
+    { q: "كم عدد الحكام الرسميين (الأول والثاني) في مباراة رسمية؟", a: ["1", "2", "3", "4", "5"], c: "2" },
+    { q: "من اللاعب الذي يرتدي قميصاً بلون مختلف عن بقية الفريق؟", a: ["المعد", "القائد", "الليبرو", "المدافع", "الضارب الخلفي"], c: "الليبرو" },
+    { q: "هل يمكن صد الإرسال من قبل الفريق المستقبل؟", a: ["نعم", "لا", "فقط في الدوريات", "حسب القانون المحلي", "فقط في الكرة الشاطئية"], c: "لا" },
+    { q: "ماذا يحدث إذا لمس لاعب الشبكة أثناء محاولة لعب الكرة؟", a: ["لا شيء", "إعادة اللعب", "احتساب خطأ", "تحذير", "نقطة إضافية للفريق الآخر"], c: "احتساب خطأ" },
+    { q: "كم طول المجال الحر (الارتفاع) فوق منطقة اللعب في البطولات الدولية؟", a: ["7 م", "9 م", "10 م", "11 م", "12.5 م"], c: "12.5 م" },
+    { q: "هل يمكن أن يستمر اللعب إذا اصطدمت الكرة بالحكم؟", a: ["نعم", "لا", "إذا لم يتغير اتجاهها", "حسب تقدير الحكم", "فقط في الدفاع"], c: "لا" }
+];
+
+let questions = [];
+let currentQIndex = 0;
+let score = 0;
+let userAnswers = [];
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function startQuiz() {
+    questions = shuffle([...rawData]);
+    document.getElementById("total-qs").innerText = questions.length;
+    currentQIndex = 0;
+    score = 0;
+    userAnswers = [];
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentQIndex >= questions.length) {
+        showResults();
+        return;
+    }
+
+    const qData = questions[currentQIndex];
+    document.getElementById("question").innerText = qData.q;
+    document.getElementById("q-num").innerText = currentQIndex + 1;
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+
+    const labels = ["أ", "ب", "ج", "د", "هـ"];
+    qData.a.forEach((opt, index) => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.innerHTML = `<span style="font-weight:bold; margin-left:10px;">${labels[index]})</span> ${opt}`;
+        btn.onclick = () => checkAnswer(btn, opt, qData.c);
+        optionsDiv.appendChild(btn);
+    });
+}
+
+function checkAnswer(btn, selected, correct) {
+    const allBtns = document.querySelectorAll(".option");
+    allBtns.forEach(b => b.disabled = true);
+
+    userAnswers.push({
+        q: questions[currentQIndex].q,
+        options: questions[currentQIndex].a,
+        selected: selected,
+        correct: correct
+    });
+
+    if (selected === correct) {
+        btn.classList.add("correct");
+        score++;
+    } else {
+        btn.classList.add("wrong");
+        allBtns.forEach(b => {
+            // نستخدم endsWith للتأكد من مطابقة النص المكتوب داخل الزر مع الإجابة الصحيحة
+            if (b.innerText.endsWith(correct)) {
+                b.classList.add("correct");
+            }
+        });
+    }
+
+    document.getElementById("score").innerText = score;
+
+    setTimeout(() => {
+        currentQIndex++;
+        loadQuestion();
+    }, 1200);
+}
+
+function showResults() {
+    document.getElementById("quiz-box").style.display = "none";
+    document.getElementById("result-box").style.display = "block";
+    document.getElementById("final-res").innerText = score + " / " + questions.length;
+    let per = Math.round((score / questions.length) * 100);
+    document.getElementById("percent").innerText = "نسبة النجاح: " + per + "%";
+    generateReview();
+}
+
+function generateReview() {
+    const reviewList = document.getElementById("review-list");
+    reviewList.innerHTML = "";
+
+    userAnswers.forEach((item, index) => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "review-item";
+
+        let optionsHtml = "";
+        item.options.forEach(opt => {
+            let statusClass = "";
+            if (opt === item.correct) statusClass = "opt-correct";
+            else if (opt === item.selected && item.selected !== item.correct) statusClass = "opt-wrong";
+            optionsHtml += `<div class="review-opt ${statusClass}">${opt}</div>`;
+        });
+
+        itemDiv.innerHTML = `
+            <div class="review-q">${index + 1}. ${item.q}</div>
+            ${optionsHtml}
+        `;
+        reviewList.appendChild(itemDiv);
+    });
+    document.getElementById("review-area").style.display = "block";
+}
+
+startQuiz();
+</script>
+</body>
+</html>
