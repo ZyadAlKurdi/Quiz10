@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار قانون الكرة الطائرة - إعداد زياد طارق عزيز</title>
+    <title>اختبار قانون الكرة الطائرة الشامل - 50 سؤالاً</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #2c3e50; --secondary: #34495e; --wrong: #e74c3c; --correct: #27ae60; --bg: #f4f7f6; }
@@ -35,9 +35,9 @@
 
 <div class="quiz-container">
     <div id="quiz-box">
-        <h1>پرسیاری ساڵی پار</h1>
+        <h1>امتحان نهاية السنة ٢٠٢٥</h1>
         <div class="stats">
-            <span>السؤال: <span id="q-num">1</span> / <span id="total-qs">47</span></span>
+            <span>السؤال: <span id="q-num">1</span> / <span id="total-qs">50</span></span>
             <span>النتيجة: <span id="score">0</span></span>
         </div>
         <div id="question" class="question">جاري تحميل السؤال...</div>
@@ -46,7 +46,7 @@
 
     <div id="result-box" class="result-screen">
         <h1>انتهى الاختبار</h1>
-        <div class="final-score" id="final-res">0 / 47</div>
+        <div class="final-score" id="final-res">0 / 50</div>
         <div id="percent" style="font-size: 24px; font-weight: bold; margin-bottom: 20px;"></div>
         <button onclick="window.print()" class="btn-action btn-pdf">تحميل النتيجة كـ PDF 📄</button>
         <button onclick="location.reload()" class="btn-action btn-reload">إعادة الاختبار 🔄</button>
@@ -105,7 +105,10 @@ const rawData = [
     { q: "هل يمكن صد الإرسال من قبل الفريق المستقبل؟", a: ["نعم", "لا", "فقط في الدوريات", "حسب القانون المحلي", "فقط في الكرة الشاطئية"], c: "لا" },
     { q: "ماذا يحدث إذا لمس لاعب الشبكة أثناء محاولة لعب الكرة؟", a: ["لا شيء", "إعادة اللعب", "احتساب خطأ", "تحذير", "نقطة إضافية للفريق الآخر"], c: "احتساب خطأ" },
     { q: "كم طول المجال الحر (الارتفاع) فوق منطقة اللعب في البطولات الدولية؟", a: ["7 م", "9 م", "10 م", "11 م", "12.5 م"], c: "12.5 م" },
-    { q: "هل يمكن أن يستمر اللعب إذا اصطدمت الكرة بالحكم؟", a: ["نعم", "لا", "إذا لم يتغير اتجاهها", "حسب تقدير الحكم", "فقط في الدفاع"], c: "لا" }
+    { q: "هل يمكن أن يستمر اللعب إذا اصطدمت الكرة بالحكم؟", a: ["نعم", "لا", "إذا لم يتغير اتجاهها", "حسب تقدير الحكم", "فقط في الدفاع"], c: "لا" },
+    { q: "هل يجوز طلب وقت مستقطع في كل شوط؟", a: ["نعم", "لا", "فقط في الشوط الخامس", "فقط عند التعادل", "إذا طلب المدرب"], c: "نعم" },
+    { q: "متى يتم احتساب خطأ دوران؟", a: ["عند التبديل الخاطئ", "عند الإرسال", "عند بداية اللعب", "في أي وقت", "كل ما سبق"], c: "عند الإرسال" },
+    { q: "ما هي المسافة المسموح بها للمنطقة الحرة الجانبية في مسابقات الاتحاد الدولي؟", a: ["2م", "3م", "4م", "5م", "6م"], c: "5م" }
 ];
 
 let questions = [];
@@ -170,7 +173,6 @@ function checkAnswer(btn, selected, correct) {
     } else {
         btn.classList.add("wrong");
         allBtns.forEach(b => {
-            // نستخدم endsWith للتأكد من مطابقة النص المكتوب داخل الزر مع الإجابة الصحيحة
             if (b.innerText.endsWith(correct)) {
                 b.classList.add("correct");
             }
